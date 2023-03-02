@@ -1,9 +1,41 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import type { NextPage } from 'next';
+import { ConnectButton, useConnectModal } from '@rainbow-me/rainbowkit';
 import Head from 'next/head';
+import DConnect from '../components/DConnect';
+import DConnect2 from '../components/DConnect2';
 import styles from '../styles/Home.module.css';
-
-const Home: NextPage = () => {
+import { useAccount, useBalance, useDisconnect, useEnsName, useNetwork, useSigner, useSwitchNetwork } from 'wagmi'
+import useMounted from '../hook/useMounted';
+import { fetchBalance } from '@wagmi/core'
+import { useEffect } from 'react';
+const Home = () => {
+  const { data: signer } = useSigner();
+  const isMounted = useMounted()
+  const { disconnect } = useDisconnect()
+  const { openConnectModal } = useConnectModal()
+  const { address: account, connector: activeConnector, isConnecting, isDisconnected } = useAccount()
+  console.log("🚀 ~ file: index.tsx:17 ~ isDisconnected:", isDisconnected)
+  console.log("🚀 ~ file: index.tsx:17 ~ isConnecting:", isConnecting)
+  const ensName = useEnsName({
+    address: account,
+    chainId: 1,
+  })
+  const { chain } = useNetwork()
+  const { switchNetwork } = useSwitchNetwork()
+  const { data, isError, isLoading } = useBalance({
+    address: account,
+  })
+  useEffect(() => {
+    const getBalance = async () => {
+      if (account) {
+        const balance = await fetchBalance({ address: account })
+        console.log(balance);
+      }
+    }
+    getBalance()
+  }, [])
+  const changeChain = () => {
+    switchNetwork?.(137)
+  }
   return (
     <div className={styles.container}>
       <Head>
@@ -14,71 +46,59 @@ const Home: NextPage = () => {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
-      <main className={styles.main}>
-        <ConnectButton />
-
-        <h1 className={styles.title}>
-          Welcome to <a href="">RainbowKit</a> + <a href="">wagmi</a> +{' '}
-          <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.tsx</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://rainbowkit.com" className={styles.card}>
-            <h2>RainbowKit Documentation &rarr;</h2>
-            <p>Learn how to customize your wallet connection flow.</p>
-          </a>
-
-          <a href="https://wagmi.sh" className={styles.card}>
-            <h2>wagmi Documentation &rarr;</h2>
-            <p>Learn how to interact with Ethereum.</p>
-          </a>
-
-          <a
-            href="https://github.com/rainbow-me/rainbowkit/tree/main/examples"
-            className={styles.card}
-          >
-            <h2>RainbowKit Examples &rarr;</h2>
-            <p>Discover boilerplate example RainbowKit projects.</p>
-          </a>
-
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Next.js Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Next.js Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a href="https://rainbow.me" target="_blank" rel="noopener noreferrer">
-          Made with ❤️ by your frens at 🌈
-        </a>
-      </footer>
+      {/* <DConnect isShow={true} /> */}
+      {isMounted && <DConnect2 />}
+      <button onClick={() => disconnect()}>注销</button>
+      <span onClick={openConnectModal}>链接</span>
+      {isMounted && <div>当前用户的ENS:{ensName.data}</div>}
+      {isMounted && <div>当前链Id:{chain?.id}</div>}
+      <button onClick={changeChain}>切换链</button>
+      {isMounted && <div>当前用户余额：{data?.formatted}{data?.symbol}</div>}
+      <div style={{ color: 'green' }}>chainStatus="full"</div>
+      <br />
+      <br />
+      <ConnectButton label='我是自定义按钮文字' chainStatus="full" />
+      <br />
+      <br />
+      <div style={{ color: 'green' }}>chainStatus="icon"</div>
+      <br />
+      <ConnectButton label='我是自定义按钮文字' chainStatus="icon" />
+      <br />
+      <br />
+      <div style={{ color: 'green' }}>chainStatus="name"</div>
+      <br />
+      <ConnectButton label='我是自定义按钮文字' chainStatus="name" />
+      <br />
+      <br />
+      <div style={{ color: 'green' }}>chainStatus="none"</div>
+      <br />
+      <ConnectButton label='我是自定义按钮文字' chainStatus="none" />
+      <br />
+      <br />
+      <div style={{ color: 'green' }}>showBalance="none"</div>
+      <br />
+      <ConnectButton label='我是自定义按钮文字' chainStatus="none" showBalance={false} />
+      <br />
+      <br />
+      <div style={{ color: 'green' }}>accountStatus="address"</div>
+      <br />
+      <ConnectButton label='我是自定义按钮文字' chainStatus="none" showBalance={false} accountStatus={"address"} />
+      <br />
+      <br />
+      <div style={{ color: 'green' }}>accountStatus="avatar"</div>
+      <br />
+      <ConnectButton label='我是自定义按钮文字' chainStatus="none" showBalance={false} accountStatus={"avatar"} />
+      <br />
+      <br />
+      <div style={{ color: 'green' }}>accountStatus="full"</div>
+      <br />
+      <ConnectButton label='我是自定义按钮文字' chainStatus="none" showBalance={false} accountStatus={"full"} />
+      <br />
+      <br />
+      <DConnect isShow={true} />
+      <br />
+      <br />
     </div>
   );
 };
-
 export default Home;
